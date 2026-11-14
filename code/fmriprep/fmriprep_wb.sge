@@ -1,0 +1,53 @@
+#!/bin/bash
+#$ -N toam_fmriprep
+#$ -q all.q@milner
+#$ -pe smp 8
+#$ -o /analysis/halilaziz/halil/TOAM/logs/fmriprep/
+#$ -j y
+# Preregistered robustness pipeline: whole-brain arm (ds006266) preprocessed with the latest stable fMRIPrep.
+# One array task = one participant (line N+1 of raw/ds006266/participants.tsv).
+# Queued by submit_after_spm.sh so it starts only after the SPM12 batch; low priority, at most 4 at once.
+# Golden rule: everything written stays under $TOAM (HOME, work dir, caches, outputs, logs).
+set -uo pipefail
+source /analysis/halilaziz/halil/TOAM/code/env.sh
+VER=${FMRIPREP_VERSION:-25.2.7}
+BIDS=$TOAM/raw/ds006266
+OUT=$TOAM/derivatives/fmriprep-$VER
+sub=$(awk -F'\t' -v n=$((SGE_TASK_ID + 1)) 'NR==n{sub(/^sub-/,"",$1); print $1}' "$BIDS/participants.tsv")
+[ -n "$sub" ] || { echo "no participant for task $SGE_TASK_ID"; exit 1; }
+tag=sub-$sub
+WORK=$TOAM/work/fmriprep-$VER/$tag
+CT=$TOAM/tmp/apptainer/fmriprep-${VER}_$tag
+DONE=$OUT/logs/done/$tag
+[ -e "$DONE" ] && { echo "$tag already done"; exit 0; }
+mkdir -p "$OUT/logs/done" "$WORK" "$CT" "$TOAM/tmp/apptainer_home" "$TOAM/logs/fmriprep"
+SIF=$TOAM/containers/fmriprep-$VER.sif
+FSLIC=/misc/opt/freesurfer7.2/license.txt
+ctr=(--cleanenv --contain --workdir "$CT" --home "$TOAM/tmp/apptainer_home" -B "$TOAM" -B "$FSLIC:/opt/fs_license.txt:ro")
+# fMRIPrep deletes an fsaverage that looks incomplete, so concurrent first copies race: copy once, atomically.
+FSDIR=$OUT/sourcedata/freesurfer; mkdir -p "$FSDIR"
+if [ ! -e "$FSDIR/fsaverage" ]; then
+  if mkdir "$FSDIR/.fsaverage.lock" 2>/dev/null; then
+    rm -rf "$FSDIR/fsaverage.part"
+    apptainer exec "${ctr[@]}" "$SIF" cp -r /opt/freesurfer/subjects/fsaverage "$FSDIR/fsaverage.part" \
+      && mv "$FSDIR/fsaverage.part" "$FSDIR/fsaverage"
+    rmdir "$FSDIR/.fsaverage.lock"
+  else
+    for _ in $(seq 180); do [ -e "$FSDIR/fsaverage" ] && break; sleep 10; done
+  fi
+fi
+n=${NSLOTS:-8}
+export APPTAINERENV_TEMPLATEFLOW_HOME=$TEMPLATEFLOW_HOME APPTAINERENV_OMP_NUM_THREADS=$n
+echo "$(date +%F_%T) $tag on $(hostname) with $n slots, fMRIPrep $VER"
+start=$(date +%s)
+# Options follow the authors' own fMRIPrep script (TomW92/TOAM-fMRI e257c25, run_fMRIprep.sh) where applicable:
+# output spaces MNI152NLin2009cAsym + anat, --ignore sbref t2w, --bold2t1w-init register, 60 GB memory.
+nice -n 19 apptainer run "${ctr[@]}" -B "$WORK:/work" "$SIF" "$BIDS" "$OUT" participant \
+  --participant-label "$sub" -w /work --fs-license-file /opt/fs_license.txt \
+  --output-spaces MNI152NLin2009cAsym anat --ignore sbref t2w --bold2t1w-init register \
+  --nthreads "$n" --omp-nthreads "$n" --mem-mb 60000 \
+  --skull-strip-fixed-seed --random-seed 20261112 --skip-bids-validation --notrack --stop-on-first-crash
+rc=$?
+echo "$(date +%F_%T) $tag rc=$rc elapsed_s=$(( $(date +%s) - start ))"
+if [ $rc -eq 0 ]; then touch "$DONE"; rm -rf "$WORK" "$CT"; fi
+exit $rc

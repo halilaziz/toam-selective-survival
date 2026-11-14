@@ -1,0 +1,10 @@
+# Whitelist: only code, the preregistration and the public README/licences are tracked.
+# Internal notes (status, pilot report, design extraction, QC images) stay out of the repository.
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/code/
+!/TOAM_preregistration_HAV_v1.docx
+.DS_Store
+__pycache__/

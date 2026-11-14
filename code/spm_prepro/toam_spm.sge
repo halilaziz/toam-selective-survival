@@ -1,0 +1,79 @@
+#!/bin/bash
+#$ -N toam_spm
+#$ -q all.q@milner
+#$ -pe smp 1
+#$ -p -100
+#$ -S /bin/bash
+#$ -wd /analysis/halilaziz/halil/TOAM/logs/spm
+#$ -o /analysis/halilaziz/halil/TOAM/logs/spm/
+#$ -e /analysis/halilaziz/halil/TOAM/logs/spm/
+# SPM12 preprocessing of ONE TOAM participant with the authors' SPM chain (adapted copy in code/spm_prepro).
+#   pilot:  qsub code/spm_prepro/toam_spm.sge sub-60601
+#   batch:  qsub -t 1-38 -tc 4 code/spm_prepro/toam_spm.sge      (participant = line $SGE_TASK_ID of subjects_batch.txt)
+# Steps: prep_inputs.sh (copy/gunzip BIDS -> derivatives/spmMB) -> MATLAB R2026a + SPM12 r7771 (container):
+#        run_subject (authors' _1, _1s, _2 with fwhm 1) -> qc_subject (writes derivatives/spmMB_qc only).
+# Load: 1 slot, priority -100, nice 19, ionice idle, MATLAB -singleCompThread.
+# Golden rule: writes only inside /analysis/halilaziz/halil/TOAM. A rerun of a participant first removes that
+# participant's own derivatives/spmMB/<sub> and spmMB_qc/<sub> (inside TOAM); a finished participant is skipped
+# unless FORCE=1 is exported.
+set -uo pipefail
+source /analysis/halilaziz/halil/TOAM/code/env.sh
+source /analysis/halilaziz/halil/TOAM/code/spm_prepro/env_spm.sh
+
+SUB=${1:-}
+if [ -z "$SUB" ]; then
+  case "${SGE_TASK_ID:-undefined}" in undefined|"") echo "no participant given" >&2; exit 2 ;; esac
+  SUB=$(sed -n "${SGE_TASK_ID}p" "$SPMP/subjects_batch.txt" | tr -d '[:space:]')
+fi
+[[ "$SUB" =~ ^sub-[0-9]+$ ]] || { echo "bad participant '$SUB'" >&2; exit 2; }
+DS=$(arm_of "$SUB"); [ -n "$DS" ] || { echo "$SUB is in neither participants.tsv" >&2; exit 2; }
+ID=${SUB#sub-}
+TAG=${JOB_ID:-local}; case "${SGE_TASK_ID:-undefined}" in undefined|"") ;; *) TAG=${TAG}_${SGE_TASK_ID} ;; esac
+L=$TOAM/logs/spm/$SUB; guard "$L" "$DERIV/$SUB" "$QCDIR/$SUB"; mkdir -p "$L"
+if [ -f "$L/DONE" ] && [ "${FORCE:-0}" != 1 ]; then echo "$SUB already done ($L/DONE); export FORCE=1 to redo"; exit 0; fi
+touch "$L/start_$TAG"
+echo "== $SUB ($DS) job $TAG on $(hostname) $(date '+%F %T %Z')"
+echo "   SPM $SPM12 | MATLAB $MLBIN (container $(basename "$MLIMG")) | licence $MLLIC"
+qstat -u '*' -q all.q@milner 2>/dev/null | awk 'NR>2' | wc -l | xargs echo "   jobs on all.q@milner:"
+T0=$(date +%s)
+
+# fresh start for this participant (inside TOAM only)
+for d in "$DERIV/$SUB" "$QCDIR/$SUB"; do [ -e "$d" ] && { guard "$d"; echo "   removing earlier $d"; rm -rf -- "$d"; }; done
+
+# 1. copy/gunzip the BIDS inputs into derivatives/spmMB/<sub>/preproc
+/usr/bin/time -v -o "$L/time_prep_$TAG.txt" nice -n 19 ionice -c 3 bash "$SPMP/prep_inputs.sh" "$SUB" > "$L/prep_$TAG.log" 2>&1
+rc=$?; T1=$(date +%s)
+echo "== prep_inputs rc=$rc $((T1-T0)) s; inputs $(du -sb "$DERIV/$SUB" | cut -f1) bytes"
+[ $rc -eq 0 ] || { cat "$L/prep_$TAG.log"; exit 3; }
+
+# 2. MATLAB: the authors' chain, then QC. Memory sampler: summed RSS of this job's process tree, every 60 s.
+( while true; do echo -e "$(date +%s)\t$(tree_rss $$)"; sleep 60; done ) > "$L/rss_$TAG.tsv" 2>/dev/null &
+SAMPLER=$!
+CMD="run_subject($ID); try, qc_subject($ID); catch e, disp(getReport(e,'extended')); end"
+for try in $(seq 1 12); do
+  /usr/bin/time -v -o "$L/time_matlab_$TAG.txt" nice -n 19 ionice -c 3 \
+    bash -c 'source /analysis/halilaziz/halil/TOAM/code/env.sh; source $TOAM/code/spm_prepro/env_spm.sh; ml_exec "$@"' _ \
+    "toam_spm_$SUB" "$L/matlab_${TAG}_try$try.log" "$CMD" > "$L/matlab_${TAG}_try$try.out" 2>&1
+  rc=$?
+  if [ $rc -ne 0 ] && grep -qiE "License checkout failed|License Manager Error|Maximum number of users" "$L/matlab_${TAG}_try$try.out" "$L/matlab_${TAG}_try$try.log" 2>/dev/null; then
+    echo "   $(date '+%T') no MATLAB licence free (try $try/12); retrying in 5 min"; sleep 300; continue
+  fi
+  break
+done
+kill $SAMPLER 2>/dev/null; wait $SAMPLER 2>/dev/null
+T2=$(date +%s)
+echo "== MATLAB rc=$rc $((T2-T1)) s (try $try)"
+grep -E "^\[run_subject\]|^\[qc\]" "$L/matlab_${TAG}_try$try.log" 2>/dev/null
+grep -E "Elapsed|Maximum resident" "$L/time_matlab_$TAG.txt" 2>/dev/null | sed 's/^/   /'
+echo "   peak summed RSS of the job tree: $(sort -t$'\t' -k2,2n "$L/rss_$TAG.tsv" | tail -1 | cut -f2) kB"
+
+# 3. disk: total and per output type (prefix before 'sub-')
+echo "== disk $SUB: derivatives/spmMB $(du -sh "$DERIV/$SUB" | cut -f1), spmMB_qc $(du -sh "$QCDIR/$SUB" 2>/dev/null | cut -f1)"
+find "$DERIV/$SUB" -type f -printf '%s\t%P\n' | awk -F'\t' '{n=split($2,a,"/"); f=a[n]; p=f; sub(/sub-.*/,"",p); if(p=="") p="(input copy)"; loc=(n>=4)? a[2]"/"a[3] : "preproc"; s[loc"\t"p]+=$1} END{for(k in s) printf "%s\t%.3f GB\n", k, s[k]/1e9}' | sort > "$L/disk_by_type_$TAG.tsv"
+cat "$L/disk_by_type_$TAG.tsv" | sed 's/^/   /'
+
+# 4. nothing outside TOAM: files this job's user created in /tmp, /var/tmp, /dev/shm since the start (read-only check)
+echo "== outside-TOAM check (should be empty):"; find /tmp /var/tmp /dev/shm -maxdepth 3 -user "$(id -un)" -newer "$L/start_$TAG" 2>/dev/null | sed 's/^/   /'
+echo "== total wall $(( $(date +%s)-T0 )) s; rc=$rc; $(date '+%F %T %Z')"
+[ $rc -eq 0 ] && grep -q "\[run_subject\] sub-$ID finished" "$L/matlab_${TAG}_try$try.log" && date '+%F %T' > "$L/DONE"
+exit $rc
