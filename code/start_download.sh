@@ -1,6 +1,6 @@
 #!/bin/bash
 # Gentle, resumable download: nice 19 + ionice idle, 6 files x 4 connections, capped at 50 MiB/s overall.
-source /analysis/halilaziz/halil/TOAM/code/env.sh
+source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 cd $TOAM; ts=$(date +%Y%m%d_%H%M)
 setsid nohup nice -n 19 ionice -c 3 aria2c --no-conf -i manifests/aria2_input.txt -j 6 -x 4 -s 4 --min-split-size=64M \
   --max-overall-download-limit=50M --file-allocation=none --continue=true --check-integrity=true \

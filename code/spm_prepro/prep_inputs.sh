@@ -8,8 +8,8 @@
 # SPM writes prefixed outputs next to its inputs, so the inputs are copies; raw/ is only read.
 # usage: prep_inputs.sh sub-60601
 set -euo pipefail
-source /analysis/halilaziz/halil/TOAM/code/env.sh
-source /analysis/halilaziz/halil/TOAM/code/spm_prepro/env_spm.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/env_spm.sh"
 SUB=$1
 DS=$(arm_of "$SUB"); [ -n "$DS" ] || { echo "unknown participant $SUB" >&2; exit 2; }
 shopt -s nullglob

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Download progress: bytes present vs manifest, files complete, process state, recent errors.
-source /analysis/halilaziz/halil/TOAM/code/env.sh
+source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 python3 - <<'PY'
 import os,csv
 T=os.environ['TOAM']; R=list(csv.DictReader(open(f'{T}/manifests/toam_annex_manifest.tsv'),delimiter='\t'))

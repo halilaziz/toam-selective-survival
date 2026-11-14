@@ -1,24 +1,22 @@
 #!/bin/bash
 #$ -N toam_spm
-#$ -q all.q@milner
 #$ -pe smp 1
 #$ -p -100
 #$ -S /bin/bash
-#$ -wd /analysis/halilaziz/halil/TOAM/logs/spm
-#$ -o /analysis/halilaziz/halil/TOAM/logs/spm/
-#$ -e /analysis/halilaziz/halil/TOAM/logs/spm/
 # SPM12 preprocessing of ONE TOAM participant with the authors' SPM chain (adapted copy in code/spm_prepro).
-#   pilot:  qsub code/spm_prepro/toam_spm.sge sub-60601
-#   batch:  qsub -t 1-38 -tc 4 code/spm_prepro/toam_spm.sge      (participant = line $SGE_TASK_ID of subjects_batch.txt)
+#   Submit from a shell that has sourced code/env.sh, passing TOAM, the queue and the log folder:
+#   Q="-v TOAM -q $SGE_QUEUE -wd $TOAM/logs/spm -o $TOAM/logs/spm/ -e $TOAM/logs/spm/"
+#   pilot:  qsub $Q $TOAM/code/spm_prepro/toam_spm.sge sub-60601
+#   batch:  qsub $Q -t 1-38 -tc 4 $TOAM/code/spm_prepro/toam_spm.sge   (participant = line $SGE_TASK_ID of subjects_batch.txt)
 # Steps: prep_inputs.sh (copy/gunzip BIDS -> derivatives/spmMB) -> MATLAB R2026a + SPM12 r7771 (container):
 #        run_subject (authors' _1, _1s, _2 with fwhm 1) -> qc_subject (writes derivatives/spmMB_qc only).
 # Load: 1 slot, priority -100, nice 19, ionice idle, MATLAB -singleCompThread.
-# Golden rule: writes only inside /analysis/halilaziz/halil/TOAM. A rerun of a participant first removes that
+# Writes only inside $TOAM. A rerun of a participant first removes that
 # participant's own derivatives/spmMB/<sub> and spmMB_qc/<sub> (inside TOAM); a finished participant is skipped
 # unless FORCE=1 is exported.
 set -uo pipefail
-source /analysis/halilaziz/halil/TOAM/code/env.sh
-source /analysis/halilaziz/halil/TOAM/code/spm_prepro/env_spm.sh
+source "${TOAM:?submit with qsub -v TOAM (see the usage lines above)}/code/env.sh"
+source "$TOAM/code/spm_prepro/env_spm.sh"
 
 SUB=${1:-}
 if [ -z "$SUB" ]; then
@@ -34,7 +32,7 @@ if [ -f "$L/DONE" ] && [ "${FORCE:-0}" != 1 ]; then echo "$SUB already done ($L/
 touch "$L/start_$TAG"
 echo "== $SUB ($DS) job $TAG on $(hostname) $(date '+%F %T %Z')"
 echo "   SPM $SPM12 | MATLAB $MLBIN (container $(basename "$MLIMG")) | licence $MLLIC"
-qstat -u '*' -q all.q@milner 2>/dev/null | awk 'NR>2' | wc -l | xargs echo "   jobs on all.q@milner:"
+qstat -u '*' -q "${SGE_QUEUE:-all.q}" 2>/dev/null | awk 'NR>2' | wc -l | xargs echo "   jobs on ${SGE_QUEUE:-all.q}:"
 T0=$(date +%s)
 
 # fresh start for this participant (inside TOAM only)
@@ -52,7 +50,7 @@ SAMPLER=$!
 CMD="run_subject($ID); try, qc_subject($ID); catch e, disp(getReport(e,'extended')); end"
 for try in $(seq 1 12); do
   /usr/bin/time -v -o "$L/time_matlab_$TAG.txt" nice -n 19 ionice -c 3 \
-    bash -c 'source /analysis/halilaziz/halil/TOAM/code/env.sh; source $TOAM/code/spm_prepro/env_spm.sh; ml_exec "$@"' _ \
+    bash -c 'source "$TOAM/code/env.sh"; source "$TOAM/code/spm_prepro/env_spm.sh"; ml_exec "$@"' _ \
     "toam_spm_$SUB" "$L/matlab_${TAG}_try$try.log" "$CMD" > "$L/matlab_${TAG}_try$try.out" 2>&1
   rc=$?
   if [ $rc -ne 0 ] && grep -qiE "License checkout failed|License Manager Error|Maximum number of users" "$L/matlab_${TAG}_try$try.out" "$L/matlab_${TAG}_try$try.log" 2>/dev/null; then

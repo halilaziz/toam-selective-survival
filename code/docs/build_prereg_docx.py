@@ -97,7 +97,7 @@ def REF(text):
 # ---------------- content ----------------
 t = doc.add_paragraph(); t.alignment = WD_ALIGN_PARAGRAPH.CENTER
 runs(t, '**Selective survival or trace change? A preregistered, composition-controlled re-analysis of overnight retrieval effects in the TOAM 7T dataset**')
-P('Preregistration for secondary data analysis, following the OSF template of Van den Akker et al. (2021). Draft v1, 14 November 2026. Items in square brackets need the authors’ input.', align=WD_ALIGN_PARAGRAPH.CENTER, italic_all=True)
+P('Preregistration for secondary data analysis, following the OSF template of Van den Akker et al. (2021). Version 2, 14 November 2026, the version submitted for registration on OSF.', align=WD_ALIGN_PARAGRAPH.CENTER, italic_all=True)
 
 H('Part 1. Study information', 1)
 H('Background', 2)
@@ -120,6 +120,7 @@ P('The two accounts are not mutually exclusive. The main quantity of interest is
 H('Part 2. Data description', 1)
 H('Dataset', 2)
 P('TOAM (Trajectory of a Memory Trace; Willems et al., 2025) is available on OpenNeuro under a CC0 licence (snapshot 1.0.2). It comprises two arms of 20 participants each (Table 1). The authors’ analysis code is available at github.com/TomW92/TOAM-fMRI (commit e257c25, CC BY 4.0).')
+P('Both datasets can be downloaded without restriction; their identifiers are https://doi.org/10.18112/openneuro.ds006265.v1.0.2 and https://doi.org/10.18112/openneuro.ds006266.v1.0.2. The copy used for all analyses in this plan was downloaded on 12 November 2026, and every file (266 of 266) matched the SHA-256 checksum in its git-annex key. ds006265 had been accessed before, in September 2026, for the exploratory analyses described in Part 4.')
 T('Table 1', 'The two arms of the TOAM dataset', ['Arm', 'OpenNeuro accession', 'Acquisition', '*N*', 'Git commit (tag 1.0.2)'],
   [['Small field of view (MTL slab)', 'ds006265', '7T, 0.8 mm', '20', '92120fb'],
    ['Whole brain', 'ds006266', '7T, 1.1 mm', '20', '4b88a2b']], [4.6, 3.0, 2.6, 1.2, 3.6])
@@ -144,7 +145,7 @@ P('The SPM12 pipeline follows the authors’ code (commit e257c25) with path cha
 
 H('Part 4. Knowledge of the data', 1)
 P('In September 2026 we explored ds006265 in an exploratory study (Stage A). For behaviour, we computed accuracy at the two tests (.623 and .603), the number of items that changed status (589 of 1,847 item–participant pairs) and how each participant’s own 30-minute confidence predicted 24-hour survival; the last analysis used the participant’s own measure, was partly circular and was withdrawn. For the BOLD data, we attempted to register the slab to the T1 image, which failed with FLIRT and ANTs in our hands, and computed registration-free whole-slab pattern reliability across sessions (*n* = 14, ICC ≈ 0.08). We ran no univariate, ROI or condition analyses by response category.')
-P('On 12 November 2026 we checked only the structure of the data (file counts, trial-type vocabulary and item identifiers). Between 12 November 2026 and the registration date we preprocessed all 40 participants with the SPM12 pipeline and checked preprocessing quality (number of volumes, motion parameters, normalisation overlap with the MNI template and coverage of the published peaks). No GLM was fitted, and no response category, accuracy or other outcome was used in these steps. The fMRIPrep preprocessing of the whole-brain arm may still be running when this plan is registered.')
+P('On 12 November 2026 we checked only the structure of the data (file counts, trial-type vocabulary and item identifiers). Between 12 November 2026 and the registration date we ran the SPM12 preprocessing for all 40 participants (the last participants may still be in progress at registration) and checked preprocessing quality (number of volumes, motion parameters, normalisation overlap with the MNI template and coverage of the published peaks). No GLM was fitted, and no response category, accuracy or other outcome was used in these steps. The fMRIPrep preprocessing of the whole-brain arm may still be running when this plan is registered.')
 P('We have read the preprint (version 3), its code and its result tables (S8 to S11); the hypotheses concern those published effects. From Stage A we know that a participant’s own 30-minute status predicts their 24-hour status in ds006265. H1 instead uses *m*, which is computed from other participants. We have not computed *m*, and we have not computed any neural measure by response category or trajectory in either arm.')
 
 H('Part 5. Analyses', 1)
@@ -175,9 +176,9 @@ P('Analyses labelled exploratory include results for each hemisphere separately,
 H('Deviations', 2)
 P('Any deviation from this plan will be listed, with its reason, in a deviations table in the report.')
 H('Software', 2)
-P('Preprocessing uses SPM12 r7771 on MATLAB R2026a (26.1.0.3203278), run in the mathworks/matlab-deps:r2026a container on the Northwell server milner, and fMRIPrep 25.2.7 in Apptainer for the robustness pipeline. Statistical analyses use Python 3.13 in a project virtual environment, with package versions pinned and recorded at analysis time. Our code will be shared at [repository link].')
+P('Preprocessing uses SPM12 r7771 on MATLAB R2026a (26.1.0.3203278), run in the mathworks/matlab-deps:r2026a container on the Northwell server milner, and fMRIPrep 25.2.7 in Apptainer for the robustness pipeline. Statistical analyses use Python 3.13 in a project virtual environment, with package versions pinned and recorded at analysis time. Our code is at https://github.com/halilaziz/toam-selective-survival; the version at registration is tagged prereg-v1, and an archive of it is attached to the registration.')
 H('Use of AI tools', 2)
-P('[Authors to confirm after review.] The study direction and the decision to re-test the TOAM claims came from the authors. A large language model (Claude, Anthropic) helped extract design details from the preprint and code and drafted the hypotheses, analysis plan and text. The authors reviewed, revised and approved this content and take responsibility for it.')
+P('The study direction and the decision to re-test the TOAM claims came from the authors. A large language model (Claude, Anthropic) helped extract design details from the preprint and code and drafted the hypotheses, analysis plan and text. The authors reviewed, revised and approved this content and take responsibility for it.')
 
 H('References', 1)
 REF('Van den Akker, O. R., Weston, S., Campbell, L., Chopik, B., Damian, R., Davis-Kean, P., Hall, A., Kosie, J., Kruse, E., Olsen, J., Ritchie, S., Valentine, K. D., Van ’t Veer, A., & Bakker, M. (2021). Preregistration of secondary data analysis: A template and tutorial. *Meta-Psychology*, *5*. https://doi.org/10.15626/MP.2020.2625')
@@ -185,7 +186,7 @@ REF('Willems, T., Zervas, K., Brogli, L. S., Rabe, F., Federspiel, A., & Henke, 
 
 z = doc.settings.element.find(qn('w:zoom'))
 if z is not None and z.get(qn('w:percent')) is None: z.set(qn('w:percent'), '100')
-doc.core_properties.title = 'TOAM preregistration (secondary data analysis), draft v1'
+doc.core_properties.title = 'TOAM preregistration (secondary data analysis), version 2'
 doc.core_properties.author = ''
 doc.save(OUT)
 words = sum(len(p.text.split()) for p in doc.paragraphs) + sum(len(c.text.split()) for t in doc.tables for row in t.rows for c in row.cells)

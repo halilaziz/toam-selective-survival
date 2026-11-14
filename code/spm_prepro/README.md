@@ -9,8 +9,8 @@ The SPM preprocessing code in `functions/` and `preprocessing/` is from **Willem
 
 Changes to their files are minimal (paths, the `.tsv` reader, where the batch record is saved). Every one is listed in `CHANGES.md`, marked `[TOAM Cn]` in the code, and noted under each changed file's original header. The other files here (`prep_inputs.sh`, `env_spm.sh`, `toam_spm.sge`, `submit_pilot.sh`, `matlab/run_subject.m`, `matlab/qc_subject.m`) are new and belong to the THOUGHTS project.
 
-## Layout (milner, `/analysis/halilaziz/halil/TOAM`)
-- **Code:** `code/spm_prepro/`. The canonical copy is on the Mac in `~/Downloads/THOUGHTS/toam/code/spm_prepro`. The full clone of the authors' repository is `code/authors`.
+## Layout (inside the workspace root `$TOAM`)
+- **Code:** `code/spm_prepro/`. A full clone of the authors' repository is kept in `code/authors` (not part of this repository).
 - **Software:** SPM12 r7771 in `tools/spm12`; the MATLAB container `tools/containers/matlab-deps_r2026a.sif`.
 - **Inputs (copies):** `derivatives/spmMB/sub-<id>/preproc/ses-<n>/{anat,func}/<BIDS name>.nii`.
 - **Outputs:** next to the inputs, under the authors' prefixes:
@@ -24,15 +24,16 @@ Changes to their files are minimal (paths, the `.tsv` reader, where the batch re
 
 ## Run
 ```bash
+source code/env.sh                       # sets $TOAM and reads code/site.local.sh ($SGE_QUEUE, $MLBIN, $MLLIC)
 # pilot (first participant of each participants.tsv)
 bash code/spm_prepro/submit_pilot.sh
-# remaining 38 participants, at most 4 at once
-qsub -N toam_spm -q all.q@milner -pe smp 1 -p -100 -t 1-38 -tc 4 \
-     -wd /analysis/halilaziz/halil/TOAM/logs/spm -o /analysis/halilaziz/halil/TOAM/logs/spm/ -e /analysis/halilaziz/halil/TOAM/logs/spm/ \
-     /analysis/halilaziz/halil/TOAM/code/spm_prepro/toam_spm.sge
+# remaining 38 participants (we ran at most 3 at once)
+qsub -N toam_spm -v TOAM -q "$SGE_QUEUE" -pe smp 1 -p -100 -t 1-38 -tc 3 \
+     -wd "$TOAM/logs/spm" -o "$TOAM/logs/spm/" -e "$TOAM/logs/spm/" \
+     "$TOAM/code/spm_prepro/toam_spm.sge"
 ```
 Each job:
 1. `prep_inputs.sh`;
 2. MATLAB R2026a + SPM12 r7771: `run_subject(<id>)`, which runs the authors' `smallFOV_preprocessing_1`, `_1s`, then `_2(<id>, 1)`, as in their `prepro.sh`; then `qc_subject(<id>)`.
 
-MATLAB runs in the `matlab-deps` container because the host MATLAB crashes in its licence check on milner. A free MATLAB licence seat is needed for each running job: the lab has 6, shared with others. The job retries every 5 min when none is free.
+MATLAB runs in the `matlab-deps` container because the host MATLAB crashed in its licence check on our servers. Each running job needs a free MATLAB licence seat, so keep the number of concurrent jobs below the seats you can use. A job retries every 5 min when no seat is free.

@@ -3,7 +3,7 @@
 normalisation overlap with SPM's TPM, and slab coverage of the published hippocampal peaks. Read-only on derivatives."""
 import os, glob, sys, numpy as np, nibabel as nib
 from nibabel.processing import resample_from_to
-T=os.environ.get('TOAM','/analysis/halilaziz/halil/TOAM'); D=f'{T}/derivatives/spmMB'
+T=os.environ['TOAM']; D=f'{T}/derivatives/spmMB'  # workspace root, exported by code/env.sh
 tpm=nib.load(f'{T}/tools/spm12/tpm/TPM.nii'); tpmd=np.asarray(tpm.dataobj)
 brain=nib.Nifti1Image((tpmd[...,0]+tpmd[...,1]+tpmd[...,2]>0.5).astype(np.uint8),tpm.affine)
 PEAKS={'L hipp (-27,-16,-14)':(-27,-16,-14),'R hipp (39,-22,-12)':(39,-22,-12)}

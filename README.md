@@ -3,7 +3,7 @@
 This repository holds the code for a preregistered secondary analysis of TOAM (Trajectory of a Memory Trace; Willems et al., 2025). The study asks whether overnight differences in retrieval activity between a 30-minute and a 24-hour memory test reflect change within memory traces, or a change in which items are still remembered (selective survival). Each test's response categories (sure, unsure, guess) contain different items, and the published analyses do not hold item composition constant.
 
 ## Status (November 2026)
-- **Preregistration:** a draft is in [TOAM_preregistration_HAV_v1.docx](TOAM_preregistration_HAV_v1.docx). OSF link: [to be added].
+- **Preregistration:** [TOAM_preregistration_HAV_v2.docx](TOAM_preregistration_HAV_v2.docx), the version submitted to OSF (Secondary Data Preregistration template). The code at registration is tag `prereg-v1`. OSF link: added after registration.
 - **Data:** downloaded and verified (266/266 files match their SHA-256).
 - **Preprocessing:** SPM12 preprocessing is running. The fMRIPrep robustness run is queued.
 - **No outcome analysis has been run.** The confirmatory analyses start only after the preregistration is posted.
@@ -22,7 +22,7 @@ This repository holds the code for a preregistered secondary analysis of TOAM (T
 4. **Robustness pipeline for the whole-brain arm** (`code/fmriprep/`). fMRIPrep 25.2.7.
 5. **Preregistration document** (`code/docs/build_prereg_docx.py`). Builds the preregistration .docx.
 
-The scripts were written for one server: the workspace root is set as `TOAM` in `code/env.sh`. Change it there to run elsewhere.
+**Running elsewhere:** `code/env.sh` sets the workspace root `TOAM` to the folder that contains `code/`. Copy `code/site.example.sh` to `code/site.local.sh` (not tracked) and set the SGE queue, the MATLAB binary and licence, and the FreeSurfer licence. The SPM12 preprocessing and the fMRIPrep run were started with commit `48d47b1`, before these settings moved out of the scripts; see `code/spm_prepro/CHANGES.md`.
 
 ## Licences
 - **Our code:** MIT (see [LICENSE](LICENSE)).

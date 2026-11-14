@@ -77,7 +77,7 @@ while (shouldbeOne < 1 && search_counter<length(sequences))
 
         else %assumes is on UBELIX  [TOAM adaptation: milner, see CHANGES.md C1-C3]
             isUbelix = 1;
-            toam = getenv('TOAM'); % /analysis/halilaziz/halil/TOAM (exported by code/env.sh)
+            toam = getenv('TOAM'); % workspace root (exported by code/env.sh)
             assert(~isempty(toam), 'TOAM environment variable is not set');
             addpath(fullfile(toam,'tools','spm12')) % [TOAM C1] SPM12 r7771 inside TOAM
             fmriPath = fullfile(toam,'derivatives','authors_storage_placeholder',filesep); % [TOAM C2] authors' storage root; only used to build behavioural file names below, never read or written by preprocessing

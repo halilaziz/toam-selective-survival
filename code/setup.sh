@@ -2,7 +2,7 @@
 # Clone the two TOAM datasets at tag 1.0.2 (metadata, events, sidecars; imaging stays as git-annex symlinks)
 # and build the download manifest. Everything is written inside $TOAM.
 set -euo pipefail
-source /analysis/halilaziz/halil/TOAM/code/env.sh
+source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 mkdir -p $TOAM/raw $TOAM/logs $TOAM/manifests
 cd $TOAM/raw
 for ds in ds006265 ds006266; do

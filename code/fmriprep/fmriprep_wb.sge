@@ -1,15 +1,13 @@
 #!/bin/bash
 #$ -N toam_fmriprep
-#$ -q all.q@milner
 #$ -pe smp 8
-#$ -o /analysis/halilaziz/halil/TOAM/logs/fmriprep/
 #$ -j y
 # Preregistered robustness pipeline: whole-brain arm (ds006266) preprocessed with the latest stable fMRIPrep.
 # One array task = one participant (line N+1 of raw/ds006266/participants.tsv).
-# Queued by submit_after_spm.sh so it starts only after the SPM12 batch; low priority, at most 4 at once.
-# Golden rule: everything written stays under $TOAM (HOME, work dir, caches, outputs, logs).
+# Queued by submit_after_spm.sh (which passes TOAM, the queue and the log folder) so it starts only after the
+# SPM12 batch; low priority, at most 4 at once. Everything written stays under $TOAM (HOME, work dir, caches, outputs, logs).
 set -uo pipefail
-source /analysis/halilaziz/halil/TOAM/code/env.sh
+source "${TOAM:?submit with submit_after_spm.sh (qsub -v TOAM)}/code/env.sh"
 VER=${FMRIPREP_VERSION:-25.2.7}
 BIDS=$TOAM/raw/ds006266
 OUT=$TOAM/derivatives/fmriprep-$VER
@@ -22,7 +20,7 @@ DONE=$OUT/logs/done/$tag
 [ -e "$DONE" ] && { echo "$tag already done"; exit 0; }
 mkdir -p "$OUT/logs/done" "$WORK" "$CT" "$TOAM/tmp/apptainer_home" "$TOAM/logs/fmriprep"
 SIF=$TOAM/containers/fmriprep-$VER.sif
-FSLIC=/misc/opt/freesurfer7.2/license.txt
+: "${FSLIC:?set FSLIC in code/site.local.sh (see code/site.example.sh)}"
 ctr=(--cleanenv --contain --workdir "$CT" --home "$TOAM/tmp/apptainer_home" -B "$TOAM" -B "$FSLIC:/opt/fs_license.txt:ro")
 # fMRIPrep deletes an fsaverage that looks incomplete, so concurrent first copies race: copy once, atomically.
 FSDIR=$OUT/sourcedata/freesurfer; mkdir -p "$FSDIR"

@@ -1,6 +1,6 @@
 # Changes to the authors' SPM preprocessing code
 
-Source: github.com/TomW92/TOAM-fMRI at commit `e257c2508319a3d9127320eac2ae8ac52bffe62f` (CC BY 4.0; full clone on milner in `TOAM/code/authors`).
+Source: github.com/TomW92/TOAM-fMRI at commit `e257c2508319a3d9127320eac2ae8ac52bffe62f` (CC BY 4.0; a full clone is kept in `$TOAM/code/authors`).
 Adapted copies live in `functions/` and `preprocessing/`. Every changed line carries a `[TOAM Cn]` comment. The authors' headers are kept; each changed file has a short adaptation note under its header.
 
 ## Edits to the authors' files
@@ -33,3 +33,6 @@ Not changed: `preprocessing/smallFOV_preprocessing_1s.m`, `functions/realign.m`,
 - MATLAB: R2026a (26.1.0.3203278) in an Ubuntu 24.04 container. The authors used `MATLAB/2021b` on UBELIX for preprocessing (`prepro.sh` line 31). The host MATLAB on milner crashes during the licence checkout (FlexLM `lc_new_job` segfault under glibc 2.44).
 - SPM12: r7771 (GitHub release `r7771`, commit `3085dac`, tarball SHA-256 `5cf7f88f…13cb4`). The authors' SPM12 revision is not recorded in the repository. `/misc/opt/spm12`, which `/misc/bin/matlab` puts on the path, is r7219 and is not used.
 - `-nojvm` instead of `-nodisplay`. SPM's batch code needs no Java.
+
+## Site configuration (2026-11-14)
+The SPM12 preprocessing (all 40 participants) and the fMRIPrep run were started with the scripts of commit `48d47b1`, in which the workspace root, the SGE queue, the MATLAB binary and licence and the FreeSurfer licence were written into the scripts. From commit `prereg-v1` on, `code/env.sh` sets `$TOAM` to the folder that contains `code/` and reads these values from `code/site.local.sh` (not tracked; template `code/site.example.sh`), and the SGE scripts receive `TOAM`, the queue and the log folder from the `qsub` command. The values on our server are unchanged, so the computation is unchanged.

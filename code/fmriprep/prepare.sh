@@ -3,9 +3,9 @@
 # pull the pinned container into TOAM, record its digest, prefetch TemplateFlow templates into TOAM.
 # Gentle: nice 19 and at most 4 CPUs (taskset), because mksquashfs would otherwise use every core.
 set -uo pipefail
-source /analysis/halilaziz/halil/TOAM/code/env.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 VER=${1:-25.2.7}; mkdir -p $TOAM/containers $TOAM/tmp/apptainer_home $TEMPLATEFLOW_HOME; cd $TOAM/containers
-echo "$(date +%F_%T) start; FreeSurfer license readable: $([ -r /misc/opt/freesurfer7.2/license.txt ] && echo yes || echo NO)"
+echo "$(date +%F_%T) start; FreeSurfer license readable: $([ -r "${FSLIC:-}" ] && echo yes || echo NO)"
 if [ ! -s fmriprep-$VER.sif ]; then
   taskset -c 0-3 nice -n 19 apptainer pull fmriprep-$VER.sif docker://nipreps/fmriprep:$VER || { echo "pull failed"; exit 1; }
 fi

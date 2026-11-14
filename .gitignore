@@ -5,6 +5,8 @@
 !/README.md
 !/LICENSE
 !/code/
-!/TOAM_preregistration_HAV_v1.docx
+!/TOAM_preregistration_HAV_v2.docx
 .DS_Store
 __pycache__/
+# site settings (server paths, licence files) stay local; see code/site.example.sh
+/code/site.local.sh
