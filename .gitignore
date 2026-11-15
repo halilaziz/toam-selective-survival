@@ -8,5 +8,7 @@
 !/TOAM_preregistration_HAV_v2.docx
 .DS_Store
 __pycache__/
+.venv/
+.pytest_cache/
 # site settings (server paths, licence files) stay local; see code/site.example.sh
 /code/site.local.sh

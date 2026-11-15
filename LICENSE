@@ -20,6 +20,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Exception: the files in code/spm_prepro/functions/ and code/spm_prepro/preprocessing/
-are adapted from github.com/TomW92/TOAM-fMRI and remain under CC BY 4.0
-(see code/spm_prepro/LICENSE_authors_CC-BY-4.0.txt).
+Exception: the files in code/spm_prepro/functions/ and code/spm_prepro/preprocessing/,
+and code/analysis/matlab/toam_first_level.m, are adapted from github.com/TomW92/TOAM-fMRI
+and remain under CC BY 4.0 (see code/spm_prepro/LICENSE_authors_CC-BY-4.0.txt).
