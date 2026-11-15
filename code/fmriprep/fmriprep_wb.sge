@@ -39,10 +39,12 @@ export APPTAINERENV_TEMPLATEFLOW_HOME=$TEMPLATEFLOW_HOME APPTAINERENV_OMP_NUM_TH
 echo "$(date +%F_%T) $tag on $(hostname) with $n slots, fMRIPrep $VER"
 start=$(date +%s)
 # Options follow the authors' own fMRIPrep script (TomW92/TOAM-fMRI e257c25, run_fMRIprep.sh) where applicable:
-# output spaces MNI152NLin2009cAsym + anat, --ignore sbref t2w, --bold2t1w-init register, 60 GB memory.
+# output spaces MNI152NLin2009cAsym + anat, --ignore sbref t2w, BOLD-to-T1w initialisation by registration, 60 GB memory.
+# Their --bold2t1w-init register no longer exists in fMRIPrep 25.2.7 (the first submission, job 150696, stopped at
+# argument parsing on 2026-11-15); its replacement is --bold2anat-init t1w ("forces use of the T1w").
 nice -n 19 apptainer run "${ctr[@]}" -B "$WORK:/work" "$SIF" "$BIDS" "$OUT" participant \
   --participant-label "$sub" -w /work --fs-license-file /opt/fs_license.txt \
-  --output-spaces MNI152NLin2009cAsym anat --ignore sbref t2w --bold2t1w-init register \
+  --output-spaces MNI152NLin2009cAsym anat --ignore sbref t2w --bold2anat-init t1w \
   --nthreads "$n" --omp-nthreads "$n" --mem-mb 60000 \
   --skull-strip-fixed-seed --random-seed 20261112 --skip-bids-validation --notrack --stop-on-first-crash
 rc=$?

@@ -36,3 +36,6 @@ Not changed: `preprocessing/smallFOV_preprocessing_1s.m`, `functions/realign.m`,
 
 ## Site configuration (2026-11-14)
 The SPM12 preprocessing (all 40 participants) and the fMRIPrep run were started with the scripts of commit `48d47b1`, in which the workspace root, the SGE queue, the MATLAB binary and licence and the FreeSurfer licence were written into the scripts. From commit `prereg-v1` on, `code/env.sh` sets `$TOAM` to the folder that contains `code/` and reads these values from `code/site.local.sh` (not tracked; template `code/site.example.sh`), and the SGE scripts receive `TOAM`, the queue and the log folder from the `qsub` command. The values on our server are unchanged, so the computation is unchanged.
+
+## fMRIPrep option (2026-11-15)
+The first fMRIPrep submission (job 150696, 2026-11-15) stopped at argument parsing for all 20 participants, before any processing: fMRIPrep 25.2.7 no longer has the authors' `--bold2t1w-init register`. `code/fmriprep/fmriprep_wb.sge` now uses `--bold2anat-init t1w`, which in 25.2.7 "forces use of the T1w" for the initial BOLD-to-anatomical registration: the same choice as the authors' (registration rather than header). No other option changed.
