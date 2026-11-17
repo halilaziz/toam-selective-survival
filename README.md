@@ -3,7 +3,7 @@
 This repository holds the code for a preregistered secondary analysis of TOAM (Trajectory of a Memory Trace; Willems et al., 2025). The study asks whether overnight differences in retrieval activity between a 30-minute and a 24-hour memory test reflect change within memory traces, or a change in which items are still remembered (selective survival). Each test's response categories (sure, unsure, guess) contain different items, and the published analyses do not hold item composition constant.
 
 ## Status (November 2026)
-- **Preregistration:** [TOAM_preregistration_HAV_v2.docx](TOAM_preregistration_HAV_v2.docx), the version submitted to OSF (Secondary Data Preregistration template). The code at registration is tag `prereg-v1`. OSF link: added after registration.
+- **Preregistration:** [TOAM_preregistration.docx](TOAM_preregistration.docx), the version submitted to OSF (Secondary Data Preregistration template), with the implementation notes written before registration. The code at registration, including the analysis code in `code/analysis` tested on simulated data only, is tag `preregistration`. OSF link: added after registration.
 - **Data:** downloaded and verified (266/266 files match their SHA-256).
 - **Preprocessing:** SPM12 preprocessing is running. The fMRIPrep robustness run is queued.
 - **No outcome analysis has been run.** The confirmatory analyses start only after the preregistration is posted.
