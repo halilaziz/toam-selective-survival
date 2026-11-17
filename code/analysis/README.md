@@ -67,7 +67,7 @@ cd code/analysis && uv venv --python 3.13 .venv && VIRTUAL_ENV=.venv uv pip inst
 | Item exclusion, immediate recall correct | `behavior/r_utils.R:186` (`first.retrieval == "correct"`) |
 | No sure + incorrect at 30 min, 24 h or recognition | `behavior/r_utils.R:192–195` |
 | Valid answers: buttons 2/3, ratings 2/3/4 | `behavior/r_utils.R:201–209` |
-| Recognition RT > 100 ms (not applied by default, Q1) | `behavior/r_utils.R:185` |
+| Recognition RT > 100 ms (not applied, D1) | `behavior/r_utils.R:185` |
 | Logfile columns (immediate recall, buttons) | `behavior/01_fmri_create_dfs.R:54–55, 66–67, 76–80` |
 | Released events = 'maxTrials' version; status suffix; 'NA' | `behavior/04_fmri_onsets.R:352–381, 639–690, 782–799` |
 | Aborted-acquisition trials already removed | `behavior/04_fmri_onsets.R:45–54` |
@@ -153,19 +153,18 @@ The released events lack the immediate-recall result and the button codes. They 
 - **Secondary RQ2 ROI.** `roi.anatomical_roi_mean` applies the coverage rule. The masks themselves are not made yet; that needs FreeSurfer 7 `segmentHA_T1` on each T1 and a warp with the participant's SPM12 deformation, as in the authors' `normalisation_spm.m`.
 - **fMRIPrep route for RQ3.** Still needed: 6-mm smoothing of the MNI outputs, a spec variant pointing at the fMRIPrep files and its six motion parameters, and a brain mask. The agreement criterion is implemented (`h2h3.pipelines_agree`). The fMRIPrep run is still in progress.
 
-## Questions for Halil (implementation choices that the plan does not settle)
-- **Q1. Recognition RT rule.** `r_utils.R:185` drops items with a recognition RT ≤ 100 ms, but the preregistered list does not name this rule. The default leaves it out; `--recog-rt-rule` applies it.
-- **Q2. Excluded items in the GLM.** The authors' GLM used all trials ('maxTrials', `contrast_multi_session.m:35–37`), while the plan excludes items.
-  - Implemented: excluded items' correct-guess and correct-sure faceRecog trials form an `_excl` part of the split, so no preregistered contrast contains them. All other regressors are unchanged.
-  - The alternative is to put them into `_other`. H2r would then use C1's exact trial set, but H2r and H2a would rest on different item sets.
-- **Q2b. 'All items' terms of H2r and H3r.** They are the count-weighted sum of the split parts, which estimates the unsplit regressor. For these terms, the ≥ 4 trials rule is applied to the unsplit total, not to each part.
-- **Q3. Consolidation run.** It is session 2 in the authors' model, but its onsets are not public and the released dataset has no events file for it. Implemented: the run is left out of the model. The alternatives are to keep it with motion regressors only, or to ask the authors for the onsets.
-- **Q4. Late responses at immediate recall.** The authors recovered late immediate-recall responses from raw logs that are not public. A few more items may therefore be excluded here than in their data; the difference will be reported.
-- **Q5. Which Bayes factor to report.** The plan says "JZS Bayes factors, r = √2/2" for one-sided tests. Both BF10 and BF+0 are written. Which one is the registered index? BF+0 matches the one-sided tests.
-- **Q6. Agreement criterion for RQ3.** The two pipelines are compared on d_z and its 95% CI, because the raw scales may differ between pipelines.
-- **Q7. Sure split by arm.** The correct-sure split is made only in the whole-brain arm (the plan says it is "for RQ3").
-- **Q8. A primary sphere outside the slab.** If one primary sphere has no coverage in a participant, that participant is missing for the contrast and is reported. The 50% rule is applied to the anatomical ROI only, as written.
-- **Q9. Minor details.**
+## Implementation decisions (accepted by Halil on 17 November 2026, before registration)
+These choices are registered as the implementation notes of the preregistration (OSF, Statistical models; Word file, Part 5).
+- **D1. Recognition RT rule.** `r_utils.R:185` drops items with a recognition RT ≤ 100 ms. It is not in the preregistered list and is off in the authors' default settings, so it is not applied; `--recog-rt-rule` exists for a sensitivity check only.
+- **D2. Excluded items in the GLM.** The authors' GLM used all trials ('maxTrials', `contrast_multi_session.m:35–37`), while the plan excludes items. Excluded items' correct-guess and correct-sure faceRecog trials form an `_excl` part of the split that enters no preregistered contrast; all other regressors are unchanged.
+- **D2b. 'All items' terms of H2r and H3r.** They are the count-weighted sum of the split parts, which estimates the unsplit regressor. For these terms the ≥ 4 trials rule is applied to the unsplit total; for H2a, H2b and H3a it is applied to each part.
+- **D3. Odd-even (consolidation) run.** It is session 2 in the authors' model, but its onsets are not public and the released dataset has no events file for it, so it is left out of the model.
+- **D4. Late responses at immediate recall.** The authors recovered late immediate-recall responses from raw logs that are not public. A few more items may therefore be excluded here than in their data; trial counts are compared with theirs where possible.
+- **D5. Bayes factor.** The registered index is the two-sided BF10 (JZS, r = √2/2); the one-sided BF+0 is reported alongside it.
+- **D6. Agreement criterion for RQ3.** The two pipelines are compared on d_z and its 95% CI, because the raw scales may differ between pipelines.
+- **D7. Sure split by arm.** The correct-sure split is made only in the whole-brain arm (the plan says it is "for RQ3").
+- **D8. A primary sphere outside the slab.** If a primary sphere has no coverage in a participant, that participant is missing for the contrast and is reported. The 50% rule applies to the anatomical ROI only, as written.
+- **D9. Further details.**
   - H1: a participant with an empty item set is left out of that test (N is reported).
   - *m* is z-scored with the population SD.
   - A 'valid trial' for *m* is a trial whose item is not excluded and that has a status.

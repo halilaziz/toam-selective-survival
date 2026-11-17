@@ -5,8 +5,9 @@ This repository holds the code for a preregistered secondary analysis of TOAM (T
 ## Status (November 2026)
 - **Preregistration:** [TOAM_preregistration.docx](TOAM_preregistration.docx), the version submitted to OSF (Secondary Data Preregistration template), with the implementation notes written before registration. The code at registration, including the analysis code in `code/analysis` tested on simulated data only, is tag `preregistration`. OSF link: added after registration.
 - **Data:** downloaded and verified (266/266 files match their SHA-256).
-- **Preprocessing:** SPM12 preprocessing is running. The fMRIPrep robustness run is queued.
-- **No outcome analysis has been run.** The confirmatory analyses start only after the preregistration is posted.
+- **Preprocessing:** SPM12 preprocessing finished on 15 November 2026 for all 40 participants. The fMRIPrep robustness run is in progress.
+- **Analysis code:** `code/analysis`, tested on simulated data only.
+- **No outcome analysis has been run.** The confirmatory analyses start only after the registration on OSF.
 
 ## Data and source code
 - **Data:** OpenNeuro [ds006265](https://openneuro.org/datasets/ds006265) (small-field-of-view MTL arm, 20 participants) and [ds006266](https://openneuro.org/datasets/ds006266) (whole-brain arm, 20 participants), snapshot 1.0.2, CC0. The data are not included here.
