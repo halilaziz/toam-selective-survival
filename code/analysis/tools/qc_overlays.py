@@ -28,7 +28,7 @@ from nilearn import image, plotting  # noqa: E402
 
 T, OUT = sys.argv[1], sys.argv[2]
 os.makedirs(OUT, exist_ok=True)
-D = f"{T}/derivatives/spmMB"
+D = os.environ.get("TOAM_QC_DERIV") or f"{T}/derivatives/spmMB"   # sensitivity analysis: derivatives/spmMB_coregfix
 PEAKS = {"L": (-27, -16, -14), "R": (39, -22, -12)}
 RUNS = {"30min": ("ses-1", "task-retrieval"), "24h": ("ses-2", "task-forgetexp")}
 tpm = image.index_img(f"{T}/tools/spm12/tpm/TPM.nii", 0)

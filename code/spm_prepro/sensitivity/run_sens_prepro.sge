@@ -1,0 +1,26 @@
+#!/bin/bash
+#$ -N toam_sens_pp
+#$ -S /bin/bash
+#$ -pe smp 1
+#$ -p -100
+# Sensitivity analysis: step 2 with scanner coordinates, one participant per array task (line $SGE_TASK_ID of a
+# list of sub-XXXXX). At most 3 MATLAB jobs at once across all TOAM arrays (submit with -tc 3 and -hold_jid on the
+# running first-level array). Retries every 5 min when no MATLAB licence is free (12 tries).
+set -uo pipefail
+source "${TOAM:?submit with qsub -v TOAM}/code/env.sh"
+source "$TOAM/code/spm_prepro/env_spm.sh"
+LIST=${1:?list file of participants}
+S=$(sed -n "${SGE_TASK_ID:-1}p" "$LIST" | tr -d '[:space:]')
+TAG=toam_sens_pp_$S; LOG=$TOAM/logs/sensitivity/$TAG.log; mkdir -p "$(dirname "$LOG")"
+start=$(date +%s)
+for try in $(seq 1 12); do
+  nice -n 19 ionice -c 3 bash -c 'source "$TOAM/code/env.sh"; source "$TOAM/code/spm_prepro/env_spm.sh"; ml_exec "$@"' _ \
+    "$TAG" "$LOG" "addpath('$TOAM/code/spm_prepro/sensitivity'); run_sens_subject('$S')"
+  rc=$?
+  if [ $rc -ne 0 ] && grep -qiE "License checkout failed|License Manager Error|Maximum number of users" "$LOG" 2>/dev/null; then
+    echo "$(date '+%T') no MATLAB licence free (try $try/12); retrying in 5 min"; sleep 300; continue
+  fi
+  break
+done
+echo "$(date '+%F %T') $S rc=$rc try=$try elapsed_s=$(( $(date +%s) - start ))"
+exit $rc

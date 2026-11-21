@@ -1,7 +1,7 @@
 sub	arm	decision
 sub-60601	hipp	exclude
 sub-60743	hipp	include
-sub-62162	hipp	borderline (held, Halil decides; recommendation: exclude)
+sub-62162	hipp	exclude
 sub-62954	hipp	include
 sub-63071	hipp	include
 sub-63158	hipp	include
