@@ -1,0 +1,34 @@
+#!/bin/bash
+#$ -N toam_fpr_prep
+#$ -S /bin/bash
+#$ -pe smp 1
+#$ -p -100
+# fMRIPrep route for RQ3, one participant per array task (line $SGE_TASK_ID of a list of sub-XXXXX):
+# prep_inputs.py (uncompress, motion file, mask) -> smooth_s6.m in SPM12 -> remove the unsmoothed uncompressed copy.
+# PREP_ONLY=1 (qsub -v TOAM,PREP_ONLY=1) stops after prep_inputs.py, so no MATLAB seat is used.
+# MATLAB jobs: at most 3 at once across all TOAM arrays (-tc 3 and -hold_jid on the running MATLAB array).
+set -uo pipefail
+source "${TOAM:?submit with qsub -v TOAM}/code/env.sh"
+source "$TOAM/code/spm_prepro/env_spm.sh"
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+LIST=${1:?list file of participants}
+S=$(sed -n "${SGE_TASK_ID:-1}p" "$LIST" | tr -d '[:space:]')
+H=$TOAM/code/analysis/fmriprep_route
+TAG=toam_fpr_smooth_$S; LOG=$TOAM/logs/fmriprep_route/$TAG.log; mkdir -p "$(dirname "$LOG")"
+start=$(date +%s)
+nice -n 19 ionice -c 3 "$TOAM/code/analysis/.venv/bin/python" "$H/prep_inputs.py" "$TOAM" "$S" || exit 3
+[ "${PREP_ONLY:-0}" = 1 ] && { echo "$(date '+%F %T') $S prep only, elapsed_s=$(( $(date +%s) - start ))"; exit 0; }
+for try in $(seq 1 12); do
+  nice -n 19 ionice -c 3 bash -c 'source "$TOAM/code/env.sh"; source "$TOAM/code/spm_prepro/env_spm.sh"; ml_exec "$@"' _ \
+    "$TAG" "$LOG" "addpath('$H'); smooth_s6('$S')"
+  rc=$?
+  if [ $rc -ne 0 ] && grep -qiE "License checkout failed|License Manager Error|Maximum number of users" "$LOG" 2>/dev/null; then
+    echo "$(date '+%T') no MATLAB licence free (try $try/12); retrying in 5 min"; sleep 300; continue
+  fi
+  break
+done
+if [ $rc -eq 0 ] && [ "$(find "$TOAM/derivatives/fmriprep_spm/$S" -name 's6sub-*desc-preproc_bold.nii' | wc -l)" -eq 3 ]; then
+  find "$TOAM/derivatives/fmriprep_spm/$S" -name 'sub-*desc-preproc_bold.nii' -delete   # keep only the s6 copies
+fi
+echo "$(date '+%F %T') $S rc=$rc try=$try elapsed_s=$(( $(date +%s) - start ))"
+exit $rc
