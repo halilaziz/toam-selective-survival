@@ -1,0 +1,28 @@
+#!/bin/bash
+#$ -N toam_l1
+#$ -S /bin/bash
+#$ -pe smp 1
+#$ -p -100
+# One preregistered first-level GLM per array task: line $SGE_TASK_ID of a list of spec JSON files.
+# Submit from a shell that has sourced code/env.sh:
+#   qsub -v TOAM -q "$SGE_QUEUE" -o "$TOAM/logs/first_level/" -e "$TOAM/logs/first_level/" -t 1-N -tc 3 \
+#        "$TOAM/code/analysis/matlab/first_level.sge" <list file>
+# At most 3 at once (MATLAB licence seats). When no seat is free, it retries every 5 min (12 tries).
+set -uo pipefail
+source "${TOAM:?submit with qsub -v TOAM}/code/env.sh"
+LIST=${1:?list file of spec JSONs}
+SPEC=$(sed -n "${SGE_TASK_ID:-1}p" "$LIST" | tr -d '[:space:]')
+[ -f "$SPEC" ] || { echo "no spec for task ${SGE_TASK_ID:-1}"; exit 2; }
+TAG=toam_l1_$(basename "$SPEC" .json)
+LOG=$TOAM/logs/first_level/$TAG.log
+start=$(date +%s)
+for try in $(seq 1 12); do
+  bash "$TOAM/code/analysis/matlab/first_level.sh" "$SPEC" "$TAG"
+  rc=$?
+  if [ $rc -ne 0 ] && grep -qiE "License checkout failed|License Manager Error|Maximum number of users" "$LOG" 2>/dev/null; then
+    echo "$(date '+%T') no MATLAB licence free (try $try/12); retrying in 5 min"; sleep 300; continue
+  fi
+  break
+done
+echo "$(date '+%F %T') $(basename "$SPEC") rc=$rc try=$try elapsed_s=$(( $(date +%s) - start ))"
+exit $rc
