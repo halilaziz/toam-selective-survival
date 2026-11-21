@@ -1,5 +1,6 @@
 # Whitelist: only code, the preregistration and the public README/licences are tracked.
-# Internal notes (status, pilot report, design extraction, QC images) stay out of the repository.
+# Internal notes (status, pilot report, design extraction, QC images) stay out of the repository;
+# the QC decision record (qc_records/) is tracked.
 /*
 !/.gitignore
 !/README.md
@@ -12,3 +13,4 @@ __pycache__/
 .pytest_cache/
 # site settings (server paths, licence files) stay local; see code/site.example.sh
 /code/site.local.sh
+!/qc_records/
