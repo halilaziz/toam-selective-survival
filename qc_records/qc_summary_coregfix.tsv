@@ -1,0 +1,9 @@
+sub	run	file	epi_coverage_inside_tpm_brain	gm_dice_participant_vs_tpm
+sub-60601	30min	wrasub-60601_ses-1_task-retrieval_acq-epfid2d1200_bold.nii	0.7238312595973715	0.7320370481027786
+sub-60601	24h	wrasub-60601_ses-2_task-forgetexp_acq-epfid2d1200_bold.nii	0.7438456435870116	0.7578333420850746
+sub-62162	30min	wrasub-62162_ses-1_task-retrieval_acq-epfid2d1200_bold.nii	0.5301420486012407	0.7449730646799618
+sub-62162	24h	wrasub-62162_ses-2_task-forgetexp_acq-epfid2d1200_bold.nii	0.5549977653496322	0.7373983914413802
+sub-67823	30min	wrasub-67823_ses-1_task-retrieval_acq-epfid2d1200_bold.nii	0.6780958046436785	0.7202591227569481
+sub-67823	24h	wrasub-67823_ses-2_task-forgetexp_acq-epfid2d1200_bold.nii	0.7205792855890332	0.7346358471511506
+sub-67903	30min	wrasub-67903_ses-1_task-retrieval_acq-epfid2d1200_bold.nii	0.5834705388543809	0.7359016184028221
+sub-67903	24h	wrasub-67903_ses-2_task-forgetexp_acq-epfid2d1200_bold.nii	0.6996976811703968	0.7422814526460044
