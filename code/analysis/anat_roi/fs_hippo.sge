@@ -4,8 +4,8 @@
 #$ -pe smp 1
 #$ -p -100
 # Secondary RQ2 ROI (preregistration, Neural variables): FreeSurfer 7 hippocampal subfield segmentation of each
-# participant's T1 image. FreeSurfer 7.2.0 (the FreeSurfer 7 release on the server): recon-all on the session-1 T1
-# (the image whose SPM12 deformation warps the ROI), then segmentHA_T1.sh. One participant per array task (line
+# participant's T1 image. FreeSurfer 7.2.0 (the FreeSurfer 7 release on the server): recon-all on the session-1
+# SPM bias-corrected T1 (as in the authors' normalisation_spm.m), then segmentHA_T1.sh. One participant per array task (line
 # $SGE_TASK_ID of a list of sub-XXXXX); single-threaded, nice 19. Writes only inside $TOAM/derivatives/freesurfer7.2.
 set -uo pipefail
 source "${TOAM:?submit with qsub -v TOAM}/code/env.sh"
@@ -20,7 +20,9 @@ source "$FREESURFER_HOME/SetUpFreeSurfer.sh" > /dev/null 2>&1 || { echo "FreeSur
 set -u
 command -v recon-all > /dev/null || { echo "recon-all not on PATH"; exit 6; }
 mkdir -p "$SUBJECTS_DIR" "$TOAM/logs/freesurfer"
-T1=$(ls "$TOAM"/raw/ds006265/"$S"/ses-1/anat/"${S}"_ses-1_*T1w.nii.gz | head -1)
+# as in the authors' normalisation_spm.m: recon-all on the SPM bias-corrected T1 (m*) of the session whose deformation
+# warps the ROI (session 1)
+T1=$(ls "$TOAM"/derivatives/spmMB/"$S"/preproc/ses-1/anat/msub-*T1w.nii | head -1)
 [ -f "$T1" ] || { echo "$S: no T1"; exit 2; }
 start=$(date +%s)
 if [ ! -f "$SUBJECTS_DIR/$S/scripts/recon-all.done" ]; then
