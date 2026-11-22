@@ -36,3 +36,8 @@ The 6-mm smoothing mixes the zeros outside a slab into voxels near its edge, as 
 - The field-of-view version is the one that implements note 8 as intended. It is our recommendation for the RQ2 result, listed in the deviations table with the reason above.
 - Which version the paper calls primary is Halil's decision.
 - No other ROI variant is run unless it is specified here first.
+
+## Decision (2026-11-22 14:01 EST)
+Halil: "düzeltilmiş sürüm birincil olsun".
+- The field-of-view version (`results/rq2_spm_fov/`) is the primary RQ2 result.
+- The `run_toam.py roi` version is reported as the implementation that the deviation corrects. Both give "Trace change supported".
