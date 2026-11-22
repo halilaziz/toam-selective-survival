@@ -15,7 +15,10 @@ export FREESURFER_HOME=/misc/opt/freesurfer7.2
 export FS_LICENSE=${FSLIC:?set FSLIC in code/site.local.sh}
 export SUBJECTS_DIR=$TOAM/derivatives/freesurfer7.2
 export OMP_NUM_THREADS=1 ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=1
-source "$FREESURFER_HOME/SetUpFreeSurfer.sh" > /dev/null 2>&1
+set +u   # FreeSurferEnv.sh reads unset variables (FS_FREESURFERENV_NO_OUTPUT, ...)
+source "$FREESURFER_HOME/SetUpFreeSurfer.sh" > /dev/null 2>&1 || { echo "FreeSurfer setup failed"; exit 6; }
+set -u
+command -v recon-all > /dev/null || { echo "recon-all not on PATH"; exit 6; }
 mkdir -p "$SUBJECTS_DIR" "$TOAM/logs/freesurfer"
 T1=$(ls "$TOAM"/raw/ds006265/"$S"/ses-1/anat/"${S}"_ses-1_*T1w.nii.gz | head -1)
 [ -f "$T1" ] || { echo "$S: no T1"; exit 2; }
