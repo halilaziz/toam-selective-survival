@@ -1,0 +1,29 @@
+#!/bin/bash
+#$ -N toam_fs
+#$ -S /bin/bash
+#$ -pe smp 1
+#$ -p -100
+# Secondary RQ2 ROI (preregistration, Neural variables): FreeSurfer 7 hippocampal subfield segmentation of each
+# participant's T1 image. FreeSurfer 7.2.0 (the FreeSurfer 7 release on the server): recon-all on the session-1 T1
+# (the image whose SPM12 deformation warps the ROI), then segmentHA_T1.sh. One participant per array task (line
+# $SGE_TASK_ID of a list of sub-XXXXX); single-threaded, nice 19. Writes only inside $TOAM/derivatives/freesurfer7.2.
+set -uo pipefail
+source "${TOAM:?submit with qsub -v TOAM}/code/env.sh"
+LIST=${1:?list file of participants}
+S=$(sed -n "${SGE_TASK_ID:-1}p" "$LIST" | tr -d '[:space:]')
+export FREESURFER_HOME=/misc/opt/freesurfer7.2
+export FS_LICENSE=${FSLIC:?set FSLIC in code/site.local.sh}
+export SUBJECTS_DIR=$TOAM/derivatives/freesurfer7.2
+export OMP_NUM_THREADS=1 ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=1
+source "$FREESURFER_HOME/SetUpFreeSurfer.sh" > /dev/null 2>&1
+mkdir -p "$SUBJECTS_DIR" "$TOAM/logs/freesurfer"
+T1=$(ls "$TOAM"/raw/ds006265/"$S"/ses-1/anat/"${S}"_ses-1_*T1w.nii.gz | head -1)
+[ -f "$T1" ] || { echo "$S: no T1"; exit 2; }
+start=$(date +%s)
+if [ ! -f "$SUBJECTS_DIR/$S/scripts/recon-all.done" ]; then
+  case "$SUBJECTS_DIR/$S" in "$TOAM"/derivatives/freesurfer7.2/sub-*) rm -rf "$SUBJECTS_DIR/$S" ;; *) exit 9 ;; esac  # earlier partial attempt only
+  nice -n 19 recon-all -s "$S" -i "$T1" -all > "$TOAM/logs/freesurfer/$S.recon.log" 2>&1 || { echo "$S recon-all failed"; exit 3; }
+fi
+nice -n 19 segmentHA_T1.sh "$S" "$SUBJECTS_DIR" > "$TOAM/logs/freesurfer/$S.segHA.log" 2>&1 || { echo "$S segmentHA failed"; exit 4; }
+ls "$SUBJECTS_DIR/$S"/mri/?h.hippoAmygLabels-T1.v21.HBT.mgz > /dev/null || { echo "$S: no HBT labels"; exit 5; }
+echo "$(date '+%F %T') $S rc=0 elapsed_s=$(( $(date +%s) - start ))"
